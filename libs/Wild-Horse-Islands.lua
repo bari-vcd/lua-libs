@@ -40,7 +40,7 @@ local LocalPlayer: Player = Players.LocalPlayer :: Player;
 local CONFIG = {
 	DEFAULT_MOVE_TIMEOUT = 10;
 	DEFAULT_TASK_COOLDOWN = 0.40;
-	CHECKPOINT_SIZE = 15;
+	CHECKPOINT_SIZE = 10;
 	MAX_SPEED = 2000;
 	MIN_SPEED = 1;
 	CHECKPOINT_DISTANCE_THRESHOLD = 11;
@@ -136,6 +136,30 @@ end;
 function Utils.GetCurrentRidingAnimalUUID(player: Player): string?
 	-- Get UUID of the animal player is currently riding
 	return player:GetAttribute('ridingAnimal') :: string?;
+end;
+
+-- Callbacks ----
+local Callbacks       = {};
+Callbacks.connections = {};
+Callbacks.history     = {};
+
+function Callbacks.Alerts(allertType: string, callback)
+	-- Handle alert messages
+	
+	local allerts = {
+		['E2'] = 'An error occurred (E2)', -- hit runtime/cooldown
+	};
+	
+	connections[allertType] = LocalPlayer.PlayerGui:WaitForChild('Alerts').ChildAdded:Connect(function(child)
+		if (child:IsA('TextButton') and child.Name == 'MessageItem') then
+			local Label = child:FindFirstChild('Label') :: TextLabel;
+			local Icon  = child:FindFirstChild('Icon')  :: ImageLabel;
+			
+			if (Label and allerts[allertType] == Label.Text) then
+				callback( allertType );
+			end;
+		end;
+	end);
 end;
 
 ---- Character Management ----
@@ -453,8 +477,8 @@ end;
 
 function CheckpointSystem.MoveToCheckpoint(
 	checkpointPart: BasePart,
-	targetCFrame: CFrame,
-	moveTimeout: number
+	targetCFrame:   CFrame,
+	moveTimeout:    number
 ): boolean
 	-- Move to checkpoint with speed-aware pathfinding
 
@@ -494,6 +518,9 @@ function CheckpointSystem.MoveToCheckpoint(
 		CheckpointState.isProcessing = false;
 		return false;
 	end;
+	
+	Callbacks.history['hit']['checkpointPart'] = checkpointPart;
+	Callbacks.history['hit']['root_part']   = root_part;
 
 	if CheckpointSystem.IsCloseEnough(root_part.Position, targetCFrame.Position) then
 		firetouchinterest(checkpointPart, root_part, 0);
@@ -662,6 +689,17 @@ function UISetup.CreateFarmButton(): ()
 				WX_UI:AddKeyBinds({ KeyBindText = 'Farm Arena-CheckPoints'; });
 
 				Connections['MoveToArenaCheckPoints'] = task.spawn(function()
+					Callbacks.Alerts('E2', function( returnAllertType: string )
+						local checkpoint, rootpart = Callbacks.history['hit']['checkpointPart'],
+						      Callbacks.history['hit']['root_part'];
+						
+						if checkpoint and rootpart then
+							firetouchinterest(checkpoint, rootpart, 0);
+							task.wait();
+							firetouchinterest(checkpoint, rootpart, 0);
+						end;
+					end);
+					
 					while task.wait(_G.task_run_wait) do
 						local checkpoint = CheckpointSystem.FindActiveCheckpoint();
 
