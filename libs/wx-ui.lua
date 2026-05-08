@@ -2,6 +2,8 @@
 
 -- new version (0.3) written by vcd_ | year 2026
 
+-- old version: https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib
+
 ------------ Variables ------------
 cloneref = cloneref or function(object) return object; end;
 
