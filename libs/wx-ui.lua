@@ -1,6 +1,6 @@
 -- WX-UI Library
 
--- new version (0.3) written by vcd_ | year 2026
+-- new version (0.4) written by vcd_ | year 2026
 
 -- old version: https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib
 
@@ -11,6 +11,9 @@ gethui = gethui or function() return cloneref(game:GetService('CoreGui')) end;
 
 local UserInputService = cloneref(game:GetService("UserInputService"));
 local TweenService     = cloneref(game:GetService("TweenService"));
+local Players          = cloneref(game:GetService("Players"));
+
+local LocalPlayer      = Players.LocalPlayer :: Player;
 
 local WX_UI            = {...};
 
@@ -32,33 +35,33 @@ local executor_name: string? = getexecutorname() or identifyexecutor() :: string
 -- configuration (dark theme)
 local Theme = {
 	-- Backgrounds
-	Background = Color3.fromRGB(10, 10, 12),
+	Background      = Color3.fromRGB(10, 10, 12),
 	BackgroundLight = Color3.fromRGB(17, 17, 24),
 	BackgroundPanel = Color3.fromRGB(13, 13, 17),
 
 	-- Accent Colors (Purple/Pink gradient feel)
-	Accent = Color3.fromRGB(120, 75, 200),
+	Accent      = Color3.fromRGB(120, 75, 200),
 	AccentLight = Color3.fromRGB(150, 100, 220),
-	AccentDark = Color3.fromRGB(80, 50, 150),
+	AccentDark  = Color3.fromRGB(80, 50, 150),
 
 	-- Interactive
 	ButtonPrimary = Color3.fromRGB(35, 20, 70),
-	ButtonHover = Color3.fromRGB(50, 30, 90),
-	ButtonActive = Color3.fromRGB(70, 40, 120),
+	ButtonHover   = Color3.fromRGB(50, 30, 90),
+	ButtonActive  = Color3.fromRGB(70, 40, 120),
 
 	-- Text
-	TextPrimary = Color3.fromRGB(220, 220, 240),
+	TextPrimary   = Color3.fromRGB(220, 220, 240),
 	TextSecondary = Color3.fromRGB(170, 165, 220),
-	TextMuted = Color3.fromRGB(120, 120, 158),
+	TextMuted     = Color3.fromRGB(120, 120, 158),
 
 	-- Strokes
-	Stroke = Color3.fromRGB(40, 40, 56),
-	StrokeLight = Color3.fromRGB(55, 50, 85),
+	Stroke       = Color3.fromRGB(40, 40, 56),
+	StrokeLight  = Color3.fromRGB(55, 50, 85),
 	StrokeAccent = Color3.fromRGB(100, 70, 180),
 
 	-- Status
 	Success = Color3.fromRGB(61, 255, 160),
-	Error = Color3.fromRGB(255, 90, 90),
+	Error   = Color3.fromRGB(255, 90, 90),
 	Warning = Color3.fromRGB(255, 200, 100),
 }
 
@@ -76,20 +79,66 @@ local function ApplyCorner(parent: Instance, radius: number?): UICorner
 	return c :: UICorner
 end
 
+local function GetRegionCode()
+	local success, regionCode = pcall(function()
+		return cloneref(game:GetService('LocalizationService')):GetCountryRegionForPlayerAsync(LocalPlayer)
+	end);
+	return success and regionCode or 'US';
+end;
+
+local SOUTHERN_REGIONS: { [string]: boolean } = {
+	["AR"] = true, ["AU"] = true, ["BR"] = true, ["CL"] = true, 
+	["NZ"] = true, ["ZA"] = true, ["PY"] = true, ["UY"] = true
+}
+
+local function GetIsWinter(region: string, month: number): boolean
+	local isSouthern = SOUTHERN_REGIONS[region] or false
+
+	if isSouthern then
+		return month >= 6 and month <= 8
+	end
+
+	return month == 12 or month == 1 or month == 2
+end
+
+local function SyncClock(TextLabel: TextLabel)
+	local region, holidays = GetRegionCode(),
+	{["01-01"] = "🎆", ["10-31"] = "🎃", ["12-25"] = "🎄", ["02-14"] = "💝"};
+
+	task.spawn(function()
+		while TextLabel.Parent do
+			local now     = DateTime.now()
+			local lt      = now:ToLocalTime()
+			local day_key = string.format("%02d-%02d", lt.Month, lt.Day)
+
+			local emoji = holidays[day_key] or (GetIsWinter(region, lt.Month) and " ☃️") or ""
+
+			TextLabel.Text = `WX-UI | Time: {now:FormatLocalTime("LTS", LocalPlayer.LocaleId)} {emoji}`
+
+			task.wait(1)
+		end
+	end)
+end
+
 ------------ Create UI schemas ------------
-function WX_UI:Wind(is_coreui: boolean, ...)
-	local wx_ui_main          = Instance.new('GuiMain', is_coreui and gethui());
+--[[
+
+	is_coreui:   boolean  :  (default: false)  - If true, the ui will be parented to the player's PlayerGui
+	no_ubg_anim: boolean  :  (default: false)  - If true, the ui will be parented to the CoreGui
+]]
+function WX_UI:Wind(is_coreui: boolean, no_ubg_anim: boolean, ...)
+	local wx_ui_main          = Instance.new('GuiMain', is_coreui and gethui() or LocalPlayer:WaitForChild('PlayerGui'));
 	wx_ui_main.Name           = 'WX-UI';
 	wx_ui_main.IgnoreGuiInset, wx_ui_main.ResetOnSpawn = true, false;
 	wx_ui_main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
-	self.wx_ui_main = wx_ui_main;
+	self.wx_ui_main           = wx_ui_main;
 
-	local main_frame = Instance.new('Frame', wx_ui_main)
+	local main_frame   = Instance.new('Frame', wx_ui_main)
 	main_frame.BackgroundTransparency = 1
-	main_frame.Size = UDim2.new(1, 0, 1, 0)
+	main_frame.Size    = UDim2.new(1, 0, 1, 0)
 	main_frame.Visible = true
-	main_frame.Name = 'main-frame'
-	self.main_frame = main_frame
+	main_frame.Name    = 'main-frame'
+	self.main_frame    = main_frame
 
 	-- Toggle Button
 	local ui_button = Instance.new('TextButton', main_frame);
@@ -120,18 +169,20 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 	};
 	ui_btn_grad.Rotation = 0;
 
-	task.spawn(function()
-		local dir, speed = 1, 0
-		while ui_button_stroke.Parent do
-			speed += 0.01 * dir
-			ui_btn_grad.Rotation += speed
+	if not no_ubg_anim then
+		task.spawn(function()
+			local dir, speed = 1, 0
+			while ui_button_stroke.Parent do
+				speed += 0.01 * dir
+				ui_btn_grad.Rotation += speed
 
-			if speed > 10 then dir = -1 end
-			if speed < 0.5 then dir = 1 end
+				if speed > 10 then dir = -1 end
+				if speed < 0.5 then dir = 1 end
 
-			task.wait(0.01)
-		end
-	end)
+				task.wait(0.01)
+			end
+		end)
+	end;
 
 	-- Hover effect
 	ui_button.MouseEnter:Connect(function()
@@ -164,18 +215,18 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 	s_grad.Rotation = 0;
 
 	-- Gradient animation loop
-	sex_frame_grad_animation = task.spawn(function(...)
-		local dir, speed = 1, 0
-		while s_grad.Parent do
-			speed += 0.008 * dir;
-			s_grad.Rotation += speed;
+	--sex_frame_grad_animation = task.spawn(function(...)
+	--	local dir, speed = 1, 0
+	--	while s_grad.Parent do
+	--		speed += 0.008 * dir;
+	--		s_grad.Rotation += speed;
 
-			if speed > 8 then dir = -1 end;
-			if speed < 0.3 then dir = 1 end;
+	--		if speed > 8 then dir = -1 end;
+	--		if speed < 0.3 then dir = 1 end;
 
-			task.wait(0.016);
-		end;
-	end);
+	--		task.wait(0.016);
+	--	end;
+	--end);
 
 	-- Header / Title Bar
 	local titleBar = Instance.new("Frame", sex_frame)
@@ -221,9 +272,9 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 	end)
 
 	-- Title text
-	local nyanlose = Instance.new("TextLabel", titleBar)
+	local nyanlose = Instance.new('TextLabel', titleBar)
 	nyanlose.Font = Enum.Font.GothamBold
-	nyanlose.Text = 'WX-UI'
+	nyanlose.Text = `WX-UI`
 	nyanlose.Name = 'NYANLOSE'
 	nyanlose.TextColor3 = Theme.TextPrimary
 	nyanlose.TextScaled = false
@@ -236,6 +287,8 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 	nyanlose.Position = UDim2.new(0, 32, 0, 0)
 	nyanlose.Visible = true
 	nyanlose.ZIndex = 10
+
+	task.spawn(SyncClock, nyanlose);
 
 	-- Scroll container
 	local sex_scroll = Instance.new("ScrollingFrame", sex_frame)
@@ -542,9 +595,7 @@ function WX_UI:CreateSlider(text: string, min_value: number, max_value: number, 
 	ApplyCorner(sliderBt, 9)
 	ApplyStroke(sliderBt, Theme.TextPrimary, 1.5)
 
-	local initial_Y_position, initial_Y_scale = 
-		sliderBt.Position.Y.Offset, 
-	sliderBt.Position.Y.Scale 
+	local initial_Y_position, initial_Y_scale = sliderBt.Position.Y.Offset, sliderBt.Position.Y.Scale 
 
 	local dragging = false :: boolean;
 
