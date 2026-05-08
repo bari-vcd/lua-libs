@@ -40,6 +40,7 @@ local LocalPlayer: Player = Players.LocalPlayer :: Player;
 local CONFIG = {
 	DEFAULT_MOVE_TIMEOUT = 10;
 	DEFAULT_TASK_COOLDOWN = 0.40;
+	CHECKPOINT_SIZE = 15;
 	MAX_SPEED = 2000;
 	MIN_SPEED = 1;
 	CHECKPOINT_DISTANCE_THRESHOLD = 11;
@@ -481,7 +482,7 @@ function CheckpointSystem.MoveToCheckpoint(
 	end;
 	-- !
 
-	checkpointPart.Size = Vector3.new(20, 20, 20); -- Checkpoint size
+	checkpointPart.Size = Vector3.new(CONFIG.CHECKPOINT_SIZE, CONFIG.CHECKPOINT_SIZE, CONFIG.CHECKPOINT_SIZE); -- Checkpoint size
 
 	CheckpointState.isProcessing = true;
 
@@ -603,6 +604,17 @@ function UISetup.CreateSpeedSlider(): ()
 	);
 end;
 
+function UISetup.CreateCheckpointSizeSlider(): ()
+	WX_UI:CreateSlider(
+		'Checkpoint Size:',
+		1,
+		50,
+		function(c_size: number)
+			CONFIG.CHECKPOINT_SIZE = c_size;
+		end
+	);
+end;
+
 function UISetup.CreateCooldownInput(): ()
 	local frame, button, textBox = WX_UI:WX_TextButtonAndBox({
 		ButtonText = 'Change Run Cooldown';
@@ -621,7 +633,7 @@ function UISetup.CreateCooldownInput(): ()
 	);
 end;
 
-function UISetup.Create_Arrival_Distance(): ()
+function UISetup.CreateArrivalDistance(): ()
 	local frame, button, textBox = WX_UI:WX_TextButtonAndBox({
 		ButtonText = 'Change arrival distance';
 		ButtonTextSize = 13;
@@ -685,7 +697,8 @@ UISetup.CreateDeleteHorseButton();
 UISetup.CreateSpeedSlider();
 UISetup.CreateCooldownInput();
 UISetup.CreateFarmButton();
-UISetup.Create_Arrival_Distance();
+UISetup.CreateArrivalDistance();
+UISetup.CreateCheckpointSizeSlider();
 
 LocalPlayer.OnTeleport:Connect(function(...)
 	if queueteleport and load_script_queueteleport then
