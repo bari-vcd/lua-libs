@@ -46,7 +46,7 @@ local CONFIG = {
 	STUCK_DISTANCE_THRESHOLD = 3;
 	ARRIVAL_DISTANCE = 3;
 	PATHFINDING_TIMEOUT = 10;
-	HIGH_SPEED_THRESHOLD = 100;
+	HIGH_SPEED_THRESHOLD = 100; -- Use BodyVelocity above this speed
 };
 
 ---- State Management ----
@@ -71,7 +71,7 @@ local load_script_queueteleport: boolean = true;
 _G.task_run_wait = CONFIG.DEFAULT_TASK_COOLDOWN;
 
 ---- UI Library ----
-local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/wx-ui.lua'))();
+local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib'))();
 WX_UI:Wind(true);
 
 ---- Utility Functions ----
@@ -153,10 +153,10 @@ function CharacterManager.SetWalkSpeed(speed: number): ()
 end;
 
 function CharacterManager.EnableSpeedLoop(speed: number
-	
+
 ): boolean
 	-- Enable continuous speed modification
-	
+
 	if (not speed) or (speed > CONFIG.MAX_SPEED) or (speed < CONFIG.MIN_SPEED) then
 		return false;
 	end;
@@ -190,7 +190,7 @@ end;
 local AnimalManager = {};
 
 function AnimalManager.GetPlayerAnimalByUUID(player: Player?): Model?
-	
+
 	-- Get player's animal by UUID (O(1))
 	if not player then return nil end;
 
@@ -224,10 +224,10 @@ end;
 local ArenaManager = {};
 
 function ArenaManager.CacheDynamicArenaProps(
-	
+
 ): ()
 	-- Cache dynamic arena props to prevent interference
-	
+
 	local islandFolder = Utils.GetIslandFolderByName(Utils.GetCurrentIslandName(LocalPlayer));
 
 	if not islandFolder then return end;
@@ -312,7 +312,7 @@ end;
 function PathfindingSystem.CreatePath(startPosition: Vector3, 
 	targetPosition: Vector3
 ): Path?
-	
+
 	-- Create optimized path for movement
 	local pathParams = {
 		AgentRadius = 2;
@@ -470,8 +470,8 @@ function CheckpointSystem.MoveToCheckpoint(
 	if (#CheckpointState.history > 3) then
 		local s1, s2, s3 = 
 			CheckpointState.history[(#CheckpointState.history - 1)], 
-			CheckpointState.history[(#CheckpointState.history - 2)], 
-			CheckpointState.history[(#CheckpointState.history - 3)];
+		CheckpointState.history[(#CheckpointState.history - 2)], 
+		CheckpointState.history[(#CheckpointState.history - 3)];
 
 		if  (checkpointPart.Position == s2.Position and tick() ~= s2.Time) or
 			(checkpointPart.Position == s3.Position and tick() ~= s3.Time) 
@@ -689,7 +689,7 @@ UISetup.CreateCooldownInput();
 UISetup.CreateFarmButton();
 UISetup.Create_Arrival_Distance();
 
-game:GetService('Players').LocalPlayer.OnTeleport:Connect(function(...)
+LocalPlayer.OnTeleport:Connect(function(...)
 	if queueteleport and load_script_queueteleport then
 		load_script_queueteleport = false :: boolean
 		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/Wild-Horse-Islands.lua'))()");
