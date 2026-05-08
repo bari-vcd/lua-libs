@@ -71,7 +71,7 @@ local load_script_queueteleport: boolean = true;
 _G.task_run_wait = CONFIG.DEFAULT_TASK_COOLDOWN;
 
 ---- UI Library ----
-local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib'))();
+local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/wx-ui.lua'))();
 WX_UI:Wind(true);
 
 ---- Utility Functions ----
@@ -370,7 +370,6 @@ function PathfindingSystem.MoveAlongPath(
 	while currentWaypointIndex <= #waypoints do
 		local waypoint = waypoints[currentWaypointIndex];
 
-		-- Handle jump waypoints
 		if waypoint.Action == Enum.PathWaypointAction.Jump then
 			humanoid.Jump = true;
 			task.wait(0.15);
@@ -447,8 +446,8 @@ end;
 
 function CheckpointSystem.IsCloseEnough(playerPosition: Vector3, targetPosition: Vector3): boolean
 	-- Check if player is close enough to trigger checkpoint
-	local xDistance = math.abs(playerPosition.X - targetPosition.X);
-	return xDistance <= CONFIG.CHECKPOINT_DISTANCE_THRESHOLD;
+	local x_distance = math.abs(playerPosition.X - targetPosition.X);
+	return x_distance <= CONFIG.CHECKPOINT_DISTANCE_THRESHOLD;
 end;
 
 function CheckpointSystem.MoveToCheckpoint(
@@ -468,10 +467,9 @@ function CheckpointSystem.MoveToCheckpoint(
 	--end;
 
 	if (#CheckpointState.history > 3) then
-		local s1, s2, s3 = 
-			CheckpointState.history[(#CheckpointState.history - 1)], 
-		CheckpointState.history[(#CheckpointState.history - 2)], 
-		CheckpointState.history[(#CheckpointState.history - 3)];
+		local s1, s2, s3 = CheckpointState.history[(#CheckpointState.history - 1)],
+			CheckpointState.history[(#CheckpointState.history - 2)], 
+			CheckpointState.history[(#CheckpointState.history - 3)];
 
 		if  (checkpointPart.Position == s2.Position and tick() ~= s2.Time) or
 			(checkpointPart.Position == s3.Position and tick() ~= s3.Time) 
