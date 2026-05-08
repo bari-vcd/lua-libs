@@ -46,7 +46,7 @@ local CONFIG = {
 	STUCK_DISTANCE_THRESHOLD = 3;
 	ARRIVAL_DISTANCE = 3;
 	PATHFINDING_TIMEOUT = 10;
-	HIGH_SPEED_THRESHOLD = 100; -- Use BodyVelocity above this speed
+	HIGH_SPEED_THRESHOLD = 100;
 };
 
 ---- State Management ----
@@ -71,7 +71,7 @@ local load_script_queueteleport: boolean = true;
 _G.task_run_wait = CONFIG.DEFAULT_TASK_COOLDOWN;
 
 ---- UI Library ----
-local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib'))();
+local WX_UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/wx-ui.lua'))();
 WX_UI:Wind(true);
 
 ---- Utility Functions ----
