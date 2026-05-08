@@ -107,7 +107,31 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 	self.ui_button = ui_button
 
 	ApplyCorner(ui_button, 26)
-	ApplyStroke(ui_button, Theme.StrokeAccent, 1.5)
+
+	local ui_button_stroke = Instance.new("UIStroke", ui_button)
+	ui_button_stroke.Color = Color3.new(1, 1, 1)
+	ui_button_stroke.Thickness = 2
+
+	local ui_btn_grad = Instance.new("UIGradient", ui_button_stroke)
+	ui_btn_grad.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(0.5, Color3.new(0.286, 0.129, 0.757)),
+		ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+	};
+	ui_btn_grad.Rotation = 0;
+
+	task.spawn(function()
+		local dir, speed = 1, 0
+		while ui_button_stroke.Parent do
+			speed += 0.01 * dir
+			ui_btn_grad.Rotation += speed
+
+			if speed > 10 then dir = -1 end
+			if speed < 0.5 then dir = 1 end
+
+			task.wait(0.01)
+		end
+	end)
 
 	-- Hover effect
 	ui_button.MouseEnter:Connect(function()
@@ -271,8 +295,8 @@ function WX_UI:Wind(is_coreui: boolean, ...)
 
 	-- Fill for keybinds header
 	local keyHeaderFill = Instance.new("Frame", key_binds)
-	keyHeaderFill.Size = UDim2.new(1, 0, 0, 14)
-	keyHeaderFill.Position = UDim2.new(0, 0, 1, -14)
+	keyHeaderFill.Size = UDim2.new(1, 0, 0, 10)
+	keyHeaderFill.Position = UDim2.new(0, 0, 1, -11)
 	keyHeaderFill.BackgroundColor3 = Theme.Background
 	keyHeaderFill.BorderSizePixel = 0
 	keyHeaderFill.ZIndex = key_binds.ZIndex - 1
