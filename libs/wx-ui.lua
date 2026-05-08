@@ -346,7 +346,6 @@ function WX_UI:WX_CreateButton(
 	ApplyCorner(b, 10)
 	ApplyStroke(b, opts.buttonStrokeColor or Theme.StrokeLight, 1)
 
-	-- Hover effects
 	b.MouseEnter:Connect(function()
 		TweenService:Create(b, TweenInfo.new(0.15), {
 			BackgroundColor3 = Theme.ButtonHover,
@@ -358,18 +357,6 @@ function WX_UI:WX_CreateButton(
 		TweenService:Create(b, TweenInfo.new(0.15), {
 			BackgroundColor3 = opts.ButtonColor3 or Theme.ButtonPrimary,
 			TextColor3 = Theme.TextPrimary
-		}):Play()
-	end)
-
-	b.ButtonDown:Connect(function()
-		TweenService:Create(b, TweenInfo.new(0.1), {
-			BackgroundColor3 = Theme.ButtonActive
-		}):Play()
-	end)
-
-	b.ButtonUp:Connect(function()
-		TweenService:Create(b, TweenInfo.new(0.1), {
-			BackgroundColor3 = Theme.ButtonHover
 		}):Play()
 	end)
 
@@ -533,7 +520,7 @@ function WX_UI:CreateSlider(text: string, min_value: number, max_value: number, 
 
 	local initial_Y_position, initial_Y_scale = 
 		sliderBt.Position.Y.Offset, 
-	    sliderBt.Position.Y.Scale 
+	sliderBt.Position.Y.Scale 
 
 	local dragging = false :: boolean;
 
