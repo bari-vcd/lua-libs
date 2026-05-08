@@ -16,6 +16,8 @@ local ReplicatedStorage:         ReplicatedStorage         = cloneref(game:GetSe
 local RobloxReplicatedStorage:   RobloxReplicatedStorage   = cloneref(game:GetService('RobloxReplicatedStorage'));
 local VirtualUser:               VirtualUser               = cloneref(game:GetService('VirtualUser')) or cloneref(game:FindService('VirtualUser'));
 local PathfindingService:        PathfindingService        = cloneref(game:GetService('PathfindingService'));
+local ScriptContext:             ScriptContext             = cloneref(game:GetService('ScriptContext'));
+local LogService:                LogService                = cloneref(game:GetService('LogService'));
 
 ---- Types ----
 type ConnectionsType = {
@@ -97,7 +99,11 @@ function Utils.GetHumanoid(player: Player?): Humanoid?
 	return nil;
 end;
 
-function Utils.GetHumanoidRootPart(player: Player?): BasePart?
+function Utils.Jump( player: Player )
+	Utils.GetHumanoid(player):ChangeState(Enum.HumanoidStateType.Jumping);
+end;
+
+function Utils.GetHumanoidRootPart( player: Player? ): BasePart?
 	-- Get HumanoidRootPart from player character
 	local character = Utils.GetCharacter(player);
 	if character then
@@ -141,21 +147,22 @@ end;
 -- Callbacks ----
 local Callbacks       = {};
 Callbacks.connections = {};
-Callbacks.history     = {};
+Callbacks.allerts = {
+	['E2']  = 'An error occurred (E2)'; -- hit runtime/cooldown
+	['TF1'] = 'Too Far!';
+	
+	['hit_history'] = {};
+};
 
-function Callbacks.Alerts(allertType: string, callback)
+function Callbacks.Alerts( allertType: string, callback: ( ) -> ( ) )
 	-- Handle alert messages
 	
-	local allerts = {
-		['E2'] = 'An error occurred (E2)', -- hit runtime/cooldown
-	};
-	
-	connections[allertType] = LocalPlayer.PlayerGui:WaitForChild('Alerts').ChildAdded:Connect(function(child)
+	Callbacks.connections[tostring(allertType)] = LocalPlayer.PlayerGui:WaitForChild('Alerts').ChildAdded:Connect(function(child)
 		if (child:IsA('TextButton') and child.Name == 'MessageItem') then
 			local Label = child:FindFirstChild('Label') :: TextLabel;
 			local Icon  = child:FindFirstChild('Icon')  :: ImageLabel;
 			
-			if (Label and allerts[allertType] == Label.Text) then
+			if (Label and tostring(Callbacks.allerts[allertType]) == Label.Text) then
 				callback( allertType );
 			end;
 		end;
@@ -212,7 +219,7 @@ function CharacterManager.DisableSpeedLoop(): ()
 end;
 
 ---- Animal Management ----
-local AnimalManager = {};
+local AnimalManager = { ... };
 
 function AnimalManager.GetPlayerAnimalByUUID(player: Player?): Model?
 
@@ -519,8 +526,8 @@ function CheckpointSystem.MoveToCheckpoint(
 		return false;
 	end;
 	
-	Callbacks.history['hit']['checkpointPart'] = checkpointPart;
-	Callbacks.history['hit']['root_part']   = root_part;
+	Callbacks.allerts['hit_history']['checkpointPart'] = checkpointPart;
+	Callbacks.allerts['hit_history']['root_part']      = root_part;
 
 	if CheckpointSystem.IsCloseEnough(root_part.Position, targetCFrame.Position) then
 		firetouchinterest(checkpointPart, root_part, 0);
@@ -551,22 +558,35 @@ end;
 
 function CheckpointSystem.FindActiveCheckpoint(): BasePart?
 	-- Find the current active checkpoint
-	local checkpointPart = workspace:FindFirstChild('Part', true) :: Part;
+	local checkpoint_part = workspace:FindFirstChild('Part', true) :: Part;
 
-	if checkpointPart and checkpointPart:FindFirstChildOfClass('TouchTransmitter') then
-		return checkpointPart :: Part;
+	if checkpoint_part and checkpoint_part:FindFirstChildOfClass('TouchTransmitter') then
+		return checkpoint_part :: Part;
 	end;
 
 	return nil;
 end;
 
----- Anti-AFK ----
-function AntiAFK(): () 	-- Prevent AFK/idle kick
+---- Local Functions/Systems ----
+local function AntiAFK(): ()
+	-- Prevent AFK/idle kick
 	LocalPlayer.Idled:Connect(function()
 		VirtualUser:CaptureController()
 		VirtualUser:ClickButton2(Vector2.new())
 		VirtualUser:ClickButton1(Vector2.new())
 	end);
+end;
+
+local function swap(): ()
+	-- im too lazy, thats why its here
+	local checkpoint, rootpart = 
+		Callbacks.allerts['hit_history']['checkpointPart'], 
+	    Callbacks.allerts['hit_history']['root_part'];
+
+	if checkpoint and rootpart then
+		task.delay(1, firetouchinterest, checkpoint, rootpart, 0);
+		task.delay(1, Utils.Jump, LocalPlayer);
+	end;
 end;
 
 ---- UI Setup ----
@@ -689,14 +709,16 @@ function UISetup.CreateFarmButton(): ()
 				WX_UI:AddKeyBinds({ KeyBindText = 'Farm Arena-CheckPoints'; });
 
 				Connections['MoveToArenaCheckPoints'] = task.spawn(function()
-					Callbacks.Alerts('E2', function( returnAllertType: string )
-						local checkpoint, rootpart = Callbacks.history['hit']['checkpointPart'],
-						      Callbacks.history['hit']['root_part'];
-						
-						if checkpoint and rootpart then
-							firetouchinterest(checkpoint, rootpart, 0);
-							task.wait();
-							firetouchinterest(checkpoint, rootpart, 0);
+					
+					Callbacks.Alerts( 'E2', function( returnAllertType: string )
+						swap();
+					end);
+					
+					LogService.MessageOut:Connect(function( message: string, messageType: Enum.MessageType )
+						if messageType == Enum.MessageType.Warning then
+							if message:match('Too') then
+								swap();
+							end;
 						end;
 					end);
 					
