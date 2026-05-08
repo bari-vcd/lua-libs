@@ -123,8 +123,8 @@ end
 ------------ Create UI schemas ------------
 --[[
 
-	is_coreui:   boolean  :  (default: false)  - If true, the ui will be parented to the player's PlayerGui
-	no_ubg_anim: boolean  :  (default: false)  - If true, the ui will be parented to the CoreGui
+	is_coreui:   boolean  :  (default: false)  - If true, the ui will be parented to the CoreGui
+	no_ubg_anim: boolean  :  (default: false)  - If true, the ui button gradient will not animate 
 ]]
 function WX_UI:Wind(is_coreui: boolean, no_ubg_anim: boolean, ...)
 	local wx_ui_main          = Instance.new('GuiMain', is_coreui and gethui() or LocalPlayer:WaitForChild('PlayerGui'));
