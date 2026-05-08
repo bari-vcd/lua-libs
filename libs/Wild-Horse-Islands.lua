@@ -134,6 +134,10 @@ function Utils.GetIslandFolderByName(name: string): Folder?
 	return nil;
 end;
 
+function Utils.SetVip( player: Player )
+	player:SetAttribute('isVip', true);
+end;
+
 function Utils.GetCurrentIslandName(player: Player): string?
 	-- Get the island name the player is currently on
 	return player:GetAttribute('island') :: string?;
@@ -150,18 +154,18 @@ Callbacks.connections = {};
 Callbacks.allerts = {
 	['E2']  = 'An error occurred (E2)'; -- hit runtime/cooldown
 	['TF1'] = 'Too Far!';
-	
+
 	['hit_history'] = {};
 };
 
 function Callbacks.Alerts( allertType: string, callback: ( ) -> ( ) )
 	-- Handle alert messages
-	
+
 	Callbacks.connections[tostring(allertType)] = LocalPlayer.PlayerGui:WaitForChild('Alerts').ChildAdded:Connect(function(child)
 		if (child:IsA('TextButton') and child.Name == 'MessageItem') then
 			local Label = child:FindFirstChild('Label') :: TextLabel;
 			local Icon  = child:FindFirstChild('Icon')  :: ImageLabel;
-			
+
 			if (Label and tostring(Callbacks.allerts[allertType]) == Label.Text) then
 				callback( allertType );
 			end;
@@ -409,7 +413,6 @@ function PathfindingSystem.MoveAlongPath(
 
 		humanoid:MoveTo(waypoint.Position);
 
-		-- Wait for movement completion
 		local moveToFinished = false;
 		local startTime = tick();
 
@@ -499,9 +502,7 @@ function CheckpointSystem.MoveToCheckpoint(
 	--end;
 
 	if (#CheckpointState.history > 3) then
-		local s1, s2, s3 = CheckpointState.history[(#CheckpointState.history - 1)],
-			CheckpointState.history[(#CheckpointState.history - 2)], 
-			CheckpointState.history[(#CheckpointState.history - 3)];
+		local s1, s2, s3 = CheckpointState.history[(#CheckpointState.history - 1)], CheckpointState.history[(#CheckpointState.history - 2)], CheckpointState.history[(#CheckpointState.history - 3)];
 
 		if  (checkpointPart.Position == s2.Position and tick() ~= s2.Time) or
 			(checkpointPart.Position == s3.Position and tick() ~= s3.Time) 
@@ -525,7 +526,7 @@ function CheckpointSystem.MoveToCheckpoint(
 		CheckpointState.isProcessing = false;
 		return false;
 	end;
-	
+
 	Callbacks.allerts['hit_history']['checkpointPart'] = checkpointPart;
 	Callbacks.allerts['hit_history']['root_part']      = root_part;
 
@@ -579,14 +580,33 @@ end;
 
 local function swap(): ()
 	-- im too lazy, thats why its here
-	local checkpoint, rootpart = 
-		Callbacks.allerts['hit_history']['checkpointPart'], 
-	    Callbacks.allerts['hit_history']['root_part'];
-
+	local checkpoint, rootpart = Callbacks.allerts['hit_history']['checkpointPart'], Callbacks.allerts['hit_history']['root_part'];
 	if checkpoint and rootpart then
 		task.delay(1, firetouchinterest, checkpoint, rootpart, 0);
 		task.delay(1, Utils.Jump, LocalPlayer);
 	end;
+end;
+
+local function UIGradientAnimate(UIGradient: UIGradient, DoubleSpin: boolean)
+	UIGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0,    Color3.fromHSV(0, 1, 1)),
+		ColorSequenceKeypoint.new(0.2,  Color3.fromHSV(0.2, 1, 1)),
+		ColorSequenceKeypoint.new(0.4,  Color3.fromHSV(0.4, 1, 1)),
+		ColorSequenceKeypoint.new(0.6,  Color3.fromHSV(0.6, 1, 1)),
+		ColorSequenceKeypoint.new(0.8,  Color3.fromHSV(0.8, 1, 1)),
+		ColorSequenceKeypoint.new(1,    Color3.fromHSV(1, 1, 1))
+	})
+
+	if DoubleSpin then
+		local conn;
+		conn = RunService.RenderStepped:Connect(function(dt: number)
+			if not UIGradient or not UIGradient.Parent then
+				conn:Disconnect()
+				return
+			end
+			UIGradient.Rotation = (UIGradient.Rotation + (180 * dt)) % 360
+		end)
+	end
 end;
 
 ---- UI Setup ----
@@ -709,11 +729,10 @@ function UISetup.CreateFarmButton(): ()
 				WX_UI:AddKeyBinds({ KeyBindText = 'Farm Arena-CheckPoints'; });
 
 				Connections['MoveToArenaCheckPoints'] = task.spawn(function()
-					
 					Callbacks.Alerts( 'E2', function( returnAllertType: string )
 						swap();
 					end);
-					
+
 					LogService.MessageOut:Connect(function( message: string, messageType: Enum.MessageType )
 						if messageType == Enum.MessageType.Warning then
 							if message:match('Too') then
@@ -721,7 +740,7 @@ function UISetup.CreateFarmButton(): ()
 							end;
 						end;
 					end);
-					
+
 					while task.wait(_G.task_run_wait) do
 						local checkpoint = CheckpointSystem.FindActiveCheckpoint();
 
@@ -750,6 +769,61 @@ function UISetup.CreateFarmButton(): ()
 	);
 end;
 
+function UISetup.RainbowLasso(): ()
+	WX_UI:AddButtToggle(
+		WX_UI:WX_CreateButton({
+			text = 'Rainbow Lasso';
+			ButtonTextSize = 13;
+		}),
+		function()
+			if Connections['RainbowLasso'] then
+				if typeof(Connections['RainbowLasso']) == 'RBXScriptConnection' then
+					Connections['RainbowLasso']:Disconnect();
+				else
+					task.cancel( Connections['RainbowLasso'] );
+				end;
+				Connections['RainbowLasso'] = nil
+				return;
+			end;
+			
+			local function func(x)
+				local RadiusPart = x:WaitForChild('RadiusPart', 20);
+				if not RadiusPart then return end;
+
+				local MainUIStroke = RadiusPart:FindFirstChild('Main', true) 
+					and RadiusPart.Main:FindFirstChild('Frame') 
+					and RadiusPart.Main.Frame:FindFirstChild('UIStroke');
+
+				if MainUIStroke then
+					MainUIStroke.Color = Color3.new(1, 1, 1);
+
+					local conn = MainUIStroke:GetPropertyChangedSignal('Color'):Connect(function( ... )
+						MainUIStroke.Color = Color3.new(1, 1, 1);
+					end);
+
+					MainUIStroke.Destroying:Connect(function() if conn then conn:Disconnect() end;end);
+
+					local grad = MainUIStroke:FindFirstChildOfClass('UIGradient') :: UIGradient;
+					if grad then
+						UIGradientAnimate(grad, false);
+					end;
+				end;
+			end;
+			
+			Connections['RainbowLasso'] = workspace.ChildAdded:Connect(function(child: Instance)
+				if child:IsA('Model') and child.Name == 'RadiusModel' then
+					func(child);
+				end;
+			end);
+
+			local existing = workspace:FindFirstChild('RadiusModel', false);
+			if existing then
+				func(existing);
+			end;
+		end
+	);
+end;
+
 UISetup.Initialize();
 UISetup.CreateAntiAFKButton();
 UISetup.CreateTeleportButton();
@@ -759,6 +833,7 @@ UISetup.CreateCooldownInput();
 UISetup.CreateFarmButton();
 UISetup.CreateArrivalDistance();
 UISetup.CreateCheckpointSizeSlider();
+UISetup.RainbowLasso();
 
 LocalPlayer.OnTeleport:Connect(function(...)
 	if queueteleport and load_script_queueteleport then
