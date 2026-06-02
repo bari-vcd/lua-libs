@@ -5,9 +5,9 @@
 -- old version: https://raw.githubusercontent.com/hsddhdidj-ops/h/refs/heads/main/lib
 
 ------------ Variables ------------
-cloneref = cloneref or function(object) return object; end;
+cloneref = cloneref or function<T>(reference: T): T return reference; end;
 
-gethui = gethui or function() return cloneref(game:GetService('CoreGui')) end;
+gethui = gethui or function() return cloneref(game:FindService('CoreGui')) end;
 
 local UserInputService = cloneref(game:GetService("UserInputService"));
 local TweenService     = cloneref(game:GetService("TweenService"));
