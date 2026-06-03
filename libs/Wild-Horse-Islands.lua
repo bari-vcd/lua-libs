@@ -2,8 +2,12 @@
 
 -- Wild Horse Islands
 
+-- old version. new: https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/WHI-HUB.lua
+
 ---- Initialization ----
-cloneref = cloneref or function(object) return object; end;
+cloneref = cloneref or function<T>(reference: T): T
+	return reference;
+end;
 
 firetouchinterest = firetouchinterest or function(...) end;
 
