@@ -6,7 +6,7 @@
 	
 	Last Updated: 17/07/26
 
-  Tower of Hell Anti Cheat Bypass
+    Tower of Hell Anti Cheat Bypass
 	
 --]]
 -------------------------------------------
@@ -27,9 +27,11 @@ for _, v in pairs(getconnections(st.StarterPlayerScripts.LocalScript.Changed)) d
 end
 
 ls1.Enabled, ls2.Enabled = false, false
-t1, t2 = getscriptthread(ls1), getscriptthread(ls2);
-coroutine.close(t1)
-coroutine.close(t2)
+if getscriptthread then
+	t1, t2 = getscriptthread(ls1), getscriptthread(ls2);
+	coroutine.close(t1)
+	coroutine.close(t2)
+end
 Destroy(ls1)
 Destroy(ls2)
 Destroy(st.StarterPlayerScripts.jump)
