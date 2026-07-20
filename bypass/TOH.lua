@@ -34,5 +34,8 @@ if getscriptthread then
 end
 Destroy(ls1)
 Destroy(ls2)
+Destroy(st.StarterPlayerScripts.LocalScript)
+Destroy(st.StarterPlayerScripts.LocalScript2)
 Destroy(st.StarterPlayerScripts.jump)
 Destroy(st.StarterPlayerScripts.AnchorPlayer)
+print('[+] ok')
