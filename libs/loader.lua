@@ -186,6 +186,7 @@ function Loader:MakeUI()
 		self.OnAuth:Fire({
 			username = usernameBox.Text;
 			password = passwordBox.Text;
+		    GuiMain  = guiMain;
 		})
 	end)
 
