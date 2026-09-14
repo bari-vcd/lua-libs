@@ -184,9 +184,7 @@ function Loader:MakeUI()
 
 	signInButton.MouseButton1Click:Connect(function()
 		self.OnAuth:Fire({
-			username = usernameBox.Text;
-			password = passwordBox.Text;
-		    GuiMain  = guiMain;
+			UIScale = uiScale; username = usernameBox.Text; password = passwordBox.Text; GuiMain  = guiMain;
 		})
 	end)
 
