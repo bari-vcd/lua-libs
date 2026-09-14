@@ -197,3 +197,5 @@ function Loader:MakeUI()
 		uiScale = uiScale,
 	}
 end
+
+return Loader;
