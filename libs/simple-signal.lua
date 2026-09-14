@@ -26,3 +26,5 @@ function Signal:Fire(...)
 		task.spawn(fn, ...)
 	end
 end
+
+return Signal;
