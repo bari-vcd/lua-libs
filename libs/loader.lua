@@ -11,7 +11,7 @@ end)
 local Loader = {}
 Loader.__index = Loader
 
-function Loader.new(props)
+function Loader.new<T>(props)
 	local self = setmetatable({
 		uiParent = props.uiParent;
 		OnExit   = getgenv().Signal.new();
