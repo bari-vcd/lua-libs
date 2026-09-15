@@ -7,7 +7,7 @@ getgenv = getgenv or getfenv
 
 -- [ Bootstrapper ]
 getgenv().Signal = getgenv().Signal or getgenv().PsmSignal or (function()
-	return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/simple-signal.lua'))()
+	return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/WaxSignal.lua'))()
 end);
 
 -- [ Main ]
