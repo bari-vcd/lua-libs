@@ -2,18 +2,22 @@
 --!optimize 2
 --!nocheck 
 
+-- [ Variables ]
 getgenv = getgenv or getfenv
 
+-- [ Bootstrapper ]
 getgenv().Signal = getgenv().Signal or getgenv().PsmSignal or (function()
 	return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/bari-vcd/lua-libs/refs/heads/main/libs/simple-signal.lua'))()
-end)
+end);
 
+-- [ Main ]
 local Loader = {}
 Loader.__index = Loader
 
 function Loader.new<T>(props)
 	local self = setmetatable({
-		uiParent = props.uiParent;
+		UIParent = props.UIParent;
+		UIScale  = props.UIScale or 1.1;
 		OnExit   = getgenv().Signal.new();
 		OnAuth   = getgenv().Signal.new();
 	}, Loader)
@@ -22,7 +26,7 @@ function Loader.new<T>(props)
 end
 
 function Loader:MakeUI()
-	local guiMain = Instance.new('GuiMain', self.uiParent)
+	local guiMain = Instance.new('GuiMain', self.UIParent)
 	guiMain.Name = ''
 	guiMain.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	guiMain.Enabled, guiMain.ResetOnSpawn, guiMain.AutoLocalize = true, false, false
@@ -42,27 +46,25 @@ function Loader:MakeUI()
 	stroke.Color = Color3.new(0.588235, 0.588235, 0.588235)
 	stroke.Thickness = 1.4
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	local corner = Instance.new("UICorner", mainFrame)
 	corner.CornerRadius = UDim.new(0, 20)
 
-	local uiScale = Instance.new("UIScale", mainFrame)
-	uiScale.Scale = 1.1;
+	local uiScale = Instance.new('UIScale', mainFrame)
+	uiScale.Scale = self.UIScale;
 
-	Instance.new("UIDragDetector", mainFrame)
+	Instance.new('UIDragDetector', mainFrame)
 
-	local topBar = Instance.new("ImageLabel")
+	local topBar = Instance.new("ImageLabel", mainFrame)
 	topBar.BackgroundTransparency = 1
 	topBar.BorderSizePixel = 0
 	topBar.Size = UDim2.new(1, 0, 0.1, 0)
-	topBar.Parent = mainFrame
 
-	local topBarPadding = Instance.new("UIPadding")
+	local topBarPadding = Instance.new("UIPadding", topBar)
 	topBarPadding.PaddingBottom = UDim.new(0, 7)
 	topBarPadding.PaddingLeft = UDim.new(0, 17)
 	topBarPadding.PaddingRight = UDim.new(0, 17)
 	topBarPadding.PaddingTop = UDim.new(0, 7)
-	topBarPadding.Parent = topBar
 
 	local topBarLayout = Instance.new("UIListLayout")
 	topBarLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -71,12 +73,11 @@ function Loader:MakeUI()
 	topBarLayout.Padding = UDim.new(0, 8)
 	topBarLayout.Parent = topBar
 
-	local exitButton = Instance.new("TextButton")
+	local exitButton = Instance.new("TextButton", topBar)
 	exitButton.BackgroundColor3 = Color3.fromRGB(235, 87, 87)
 	exitButton.BorderSizePixel = 0
 	exitButton.Size = UDim2.fromOffset(9, 9)
 	exitButton.Text = ""
-	exitButton.Parent = topBar
 
 	local exitCorner = Instance.new("UICorner")
 	exitCorner.CornerRadius = UDim.new(1, 0)
@@ -116,7 +117,7 @@ function Loader:MakeUI()
 	title.Size = UDim2.fromOffset(130, 25)
 	title.BackgroundTransparency = 1
 	title.Text = "Sign in to continue"
-	title.Font = Enum.Font.Nunito
+	title.Font = Enum.Font.Michroma -- or Enum.Font.Nunito
 	title.TextColor3 = Color3.fromRGB(179, 179, 179)
 	title.TextScaled = true
 	title.TextWrapped = true
@@ -177,9 +178,11 @@ function Loader:MakeUI()
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(234, 227, 224))
 	}
 	signInGradient.Rotation = 265
-	
+
 	exitButton.MouseButton1Click:Connect(function()
-		self.OnExit:Fire({ UIScale = uiScale; GuiMain = guiMain })
+		self.OnExit:Fire({ 
+			UIScale = uiScale; GuiMain = guiMain 
+		})
 	end)
 
 	signInButton.MouseButton1Click:Connect(function()
@@ -193,7 +196,9 @@ function Loader:MakeUI()
 		mainFrame = mainFrame,
 		topBar = topBar,
 		uiScale = uiScale,
-	}
+	} 
 end
 
-return Loader;
+return Loader :: typeof( Loader );
+
+-- // EOF
