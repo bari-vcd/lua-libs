@@ -94,16 +94,14 @@ function Loader:MakeUI()
 	minimiseCorner.CornerRadius = UDim.new(1, 0)
 	minimiseCorner.Parent = minimiseButton
 
-	local expandButton = Instance.new("TextButton")
+	local expandButton = Instance.new("TextButton", topBar)
 	expandButton.BackgroundColor3 = Color3.fromRGB(56, 204, 107)
 	expandButton.BorderSizePixel = 0
 	expandButton.Size = UDim2.fromOffset(9, 9)
 	expandButton.Text = ""
-	expandButton.Parent = topBar
 
-	local expandCorner = Instance.new("UICorner")
+	local expandCorner = Instance.new("UICorner", expandButton)
 	expandCorner.CornerRadius = UDim.new(1, 0)
-	expandCorner.Parent = expandButton
 
 	local icon = Instance.new("ImageLabel", mainFrame)
 	icon.BackgroundTransparency = 1
@@ -116,8 +114,8 @@ function Loader:MakeUI()
 	title.Position = UDim2.new(0.5, 0, 0.24, 0)
 	title.Size = UDim2.fromOffset(130, 25)
 	title.BackgroundTransparency = 1
-	title.Text = "Sign in to continue"
-	title.Font = Enum.Font.Michroma -- or Enum.Font.Nunito
+	title.Text = 'Sign in to continue'
+	title.Font = Enum.Font.Nunito
 	title.TextColor3 = Color3.fromRGB(179, 179, 179)
 	title.TextScaled = true
 	title.TextWrapped = true
